@@ -250,7 +250,7 @@
 
     <div class="sidebar">
         <div class="logo"><span>吉</span><div>人生工作台</div><small>每天都闪闪发光</small></div>
-        <div class="cloud-status off" id="cloudStatus"><span class="dot"></span><span id="cloudText">本地模式</span></div>
+        <div class="cloud-status on" id="cloudStatus"><span class="dot"></span><span id="cloudText">云端同步中</span></div>
         <button class="on" data-tab="plan">📋 每日计划</button>
         <button data-tab="bill">💰 记账本</button>
         <button data-tab="sport">🏃 运动打卡</button>
@@ -293,11 +293,11 @@
                 </div>
                 <div style="display:flex;gap:16px;padding:10px 14px;background:rgba(0,0,0,0.02);border-radius:var(--r);margin:8px 0;font-size:13px;font-weight:600;">
                     <span>收入 <b style="color:var(--green)">¥<span id="monthInc">0.00</span></b></span>
-                    <span>支出 <b style="color:var(--pink)">¥<span id="monthExp">0.00</span></b></span>
-                    <span>结余 <b style="color:var(--blue)">¥<span id="monthSur">0.00</span></b></span>
+                    <span>支出 <b style="color:var(--pink)">¥<span id="monthExp">25.80</span></b></span>
+                    <span>结余 <b style="color:var(--blue)">¥<span id="monthSur">-25.80</span></b></span>
                 </div>
-                <canvas id="billChart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
-                <div id="billList"><div class="empty"><span>💰</span>本月还没有记录</div></div>
+                <canvas id="billChart" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas>
+                <div id="billList"><div class="li"><span>💸 <b>餐饮</b> ¥7.90 <span style="color:var(--sec);font-size:11px;">2026/7/29 13:57:27</span></span><button class="del">🗑</button></div><div class="li"><span>💸 <b>餐饮</b> ¥17.90 <span style="color:var(--sec);font-size:11px;">2026/7/29 13:57:02</span></span><button class="del">🗑</button></div></div>
             </div>
         </div>
 
@@ -328,7 +328,7 @@
                 </div>
                 <textarea id="moodText" rows="3" placeholder="写下今天的心情点滴..."></textarea>
                 <button class="btn btn3" id="addMood" style="margin-top:7px;">💾 保存日记</button>
-                <canvas id="moodChart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+                <canvas id="moodChart" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas>
                 <div id="moodList"><div class="empty"><span>💝</span>还没有心情记录</div></div>
             </div>
         </div>
@@ -439,7 +439,8 @@
         async function cloudSave(){
             if(!roomCode)return;
             try{
-                let r=await fetch(SUPA_URL+'/rest/v1/life_data?id=eq.'+roomCode,{headers:supabaseHeaders()});
+                let r=await fetch(SUPA_URL+'/rest/v1/life_data?id=eq.'+encodeURIComponent(roomCode),{headers:supabaseHeaders()});
+                if(!r.ok)throw new Error('HTTP '+r.status);
                 let existing=await r.json();
                 let method=existing.length?'PATCH':'POST';
                 let url=SUPA_URL+'/rest/v1/life_data'+(method==='PATCH'?'?id=eq.'+roomCode:'');
@@ -453,10 +454,11 @@
         async function cloudLoad(){
             if(!roomCode)return null;
             try{
-                let r=await fetch(SUPA_URL+'/rest/v1/life_data?id=eq.'+roomCode+'&select=*',{headers:supabaseHeaders()});
+                let r=await fetch(SUPA_URL+'/rest/v1/life_data?id=eq.'+encodeURIComponent(roomCode)+'&select=*',{headers:supabaseHeaders()});
+                if(!r.ok)throw new Error('HTTP '+r.status);
                 let d=await r.json();
                 return d.length?d[0].data:null;
-            }catch(e){return null;}
+            }catch(e){console.error('cloudLoad error',e);return null;}
         }
 
         async function uploadPhoto(file){
@@ -491,13 +493,13 @@
         };
         document.getElementById('joinRoom').onclick=async function(){
             let code=document.getElementById('joinCode').value.trim().toUpperCase();
-            if(!code)return;
+            if(!code)return alert('请输入房间码');
+            let btn=this;btn.disabled=true;btn.innerText='⏳ 连接中...';
             roomCode=code;localStorage.setItem('lifeRoomCode',code);
             let cd=await cloudLoad();
-            if(cd){mergeCloud(cd);setCloud(true);}
-            else{setCloud(false);}
-            closeRoom();
-            alert('✅ 已加入房间：'+code);
+            btn.disabled=false;btn.innerText='👉 加入房间';
+            if(cd){mergeCloud(cd);setCloud(true);closeRoom();alert('✅ 已加入房间：'+code);}
+            else{roomCode='';localStorage.removeItem('lifeRoomCode');setCloud(false);alert('❌ 房间不存在或网络错误，请检查房间码');}
         };
         document.getElementById('skipRoom').onclick=closeRoom;
         document.getElementById('roomBtn').onclick=function(){
