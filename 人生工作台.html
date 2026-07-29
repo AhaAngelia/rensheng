@@ -9,7 +9,6 @@
     <meta name="theme-color" content="#F2F2F7">
     <link rel="apple-touch-icon" href="data:image/svg+xml,&lt;svg xmlns=&#39;http://www.w3.org/2000/svg&#39; width=&#39;180&#39; height=&#39;180&#39;&gt;&lt;rect width=&#39;180&#39; height=&#39;180&#39; rx=&#39;40&#39; fill=&#39;%23FF2D55&#39;/&gt;&lt;text x=&#39;90&#39; y=&#39;128&#39; text-anchor=&#39;middle&#39; font-size=&#39;110&#39; font-weight=&#39;bold&#39; fill=&#39;white&#39; font-family=&#39;sans-serif&#39;&gt;%E5%90%89&lt;/text&gt;&lt;/svg&gt;">
     <script src="./人生工作台_files/chart.umd.min.js.下载"></script>
-    <script src="./人生工作台_files/supabase.min.js.下载"></script>
     <title>人生工作台</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
@@ -237,7 +236,7 @@
             <p>和另一半共享猪猪勾勾朋友圈</p>
             <div id="roomNew">
                 <p>你没有房间，可以创建一个</p>
-                <div class="code" id="generatedCode">RJRHGN</div>
+                <div class="code" id="generatedCode">------</div>
                 <button class="btn btn1" id="createRoom" style="width:100%;justify-content:center;">＋ 创建新房间</button>
             </div>
             <hr style="border:none;border-top:1px solid var(--sep);margin:14px 0;">
@@ -428,43 +427,51 @@
     </div>
 
     <script>
-        // ==================== Supabase 配置 ====================
+        // ==================== Supabase 配置（原生 fetch，不依赖 SDK）====================
         const SUPA_URL='https://bhkepxwwlvidrowqnvlr.supabase.co';
         const SUPA_KEY='sb_publishable_jrj-l4JINLp09lmk0HZw-g_98MCGC8Z';
-        const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
         let roomCode=localStorage.getItem('lifeRoomCode')||'';
         let cloudConnected=false;
-        let realtimeSub=null;
         let uploading=false;
 
-        // ==================== 本地数据 ====================
-        const K='lifeManageData_v2';
-        function defaultData(){
-            return {plan:[],bill:[],sport:[],mood:[],love:{startDate:'',birthdays:[],meetRecords:[],photos:[]},study:{projects:[],timeLogs:[]}};
-        }
-        let D=(()=>{
-            let r=localStorage.getItem(K);
-            if(!r){let o=localStorage.getItem('lifeManageData');if(o){localStorage.setItem(K,o);return JSON.parse(o);}return defaultData();}
-            return JSON.parse(r);
-        })();
-        function L(){localStorage.setItem(K,JSON.stringify(D));}
+        function supabaseHeaders(){return{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json'};}
 
-        // 合并云端数据到本地（以云端为准）
-        function mergeCloud(cd){
-            if(!cd)return;
-            D=cd;
-            L();
-            RA();
-        }
-
-        // 保存：本地 + 云端
-        async function S(){
-            L();
-            if(!roomCode||!cloudConnected)return;
+        async function cloudSave(){
+            if(!roomCode)return;
             try{
-                await sb.from('life_data').upsert({id:roomCode,room_code:roomCode,data:D,updated_at:new Date().toISOString()},{onConflict:'id'});
+                let r=await fetch(SUPA_URL+'/rest/v1/life_data?id=eq.'+roomCode,{headers:supabaseHeaders()});
+                let existing=await r.json();
+                let method=existing.length?'PATCH':'POST';
+                let url=SUPA_URL+'/rest/v1/life_data'+(method==='PATCH'?'?id=eq.'+roomCode:'');
+                let opts={method,headers:{...supabaseHeaders(),Prefer:'return=minimal'},body:JSON.stringify({id:roomCode,room_code:roomCode,data:D,updated_at:new Date().toISOString()})};
+                if(method==='PATCH')opts.headers['Prefer']='return=representation';
+                await fetch(url,opts);
                 setCloud(true);
             }catch(e){console.error('sync error',e);setCloud(false);}
+        }
+
+        async function cloudLoad(){
+            if(!roomCode)return null;
+            try{
+                let r=await fetch(SUPA_URL+'/rest/v1/life_data?id=eq.'+roomCode+'&select=*',{headers:supabaseHeaders()});
+                let d=await r.json();
+                return d.length?d[0].data:null;
+            }catch(e){return null;}
+        }
+
+        async function uploadPhoto(file){
+            let path=(roomCode||'local')+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9.]/g,'_');
+            let r=await fetch(SUPA_URL+'/storage/v1/object/love_photos/'+path,{
+                method:'POST',
+                headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':file.type||'image/jpeg'},
+                body:file
+            });
+            if(!r.ok)throw new Error('Upload failed (HTTP '+r.status+')');
+            return {path,url:SUPA_URL+'/storage/v1/object/public/love_photos/'+path};
+        }
+
+        async function deletePhotoStorage(path){
+            try{await fetch(SUPA_URL+'/storage/v1/object/love_photos/'+path,{method:'DELETE',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY}});}catch(e){}
         }
 
         function setCloud(on){
@@ -476,48 +483,47 @@
 
         // ==================== 房间 ====================
         function genCode(){return Math.random().toString(36).substring(2,8).toUpperCase();}
-        document.getElementById('generatedCode').innerText=genCode();
-        document.getElementById('createRoom').onclick=async()=>{
+
+        document.getElementById('createRoom').onclick=async function(){
             let code=genCode();roomCode=code;localStorage.setItem('lifeRoomCode',code);
-            await S();await setupRealtime();closeRoom();
+            await cloudSave();closeRoom();
             alert('✅ 房间已创建：'+code+'\n把房间码发给另一半即可加入');
         };
-        document.getElementById('joinRoom').onclick=async()=>{
+        document.getElementById('joinRoom').onclick=async function(){
             let code=document.getElementById('joinCode').value.trim().toUpperCase();
             if(!code)return;
-            let {data,error}=await sb.from('life_data').select('*').eq('id',code).single();
-            if(error||!data){alert('❌ 房间不存在或网络错误');return;}
             roomCode=code;localStorage.setItem('lifeRoomCode',code);
-            mergeCloud(data.data);
-            await setupRealtime();closeRoom();
+            let cd=await cloudLoad();
+            if(cd){mergeCloud(cd);setCloud(true);}
+            else{setCloud(false);}
+            closeRoom();
             alert('✅ 已加入房间：'+code);
         };
         document.getElementById('skipRoom').onclick=closeRoom;
-        document.getElementById('roomBtn').onclick=()=>{
+        document.getElementById('roomBtn').onclick=function(){
             document.getElementById('roomModal').style.display='flex';
             document.getElementById('generatedCode').innerText=roomCode||genCode();
         };
         function closeRoom(){document.getElementById('roomModal').style.display='none';}
+        const K='lifeManageData_v2';
+        function defaultData(){
+            return {plan:[],bill:[],sport:[],mood:[],love:{startDate:'',birthdays:[],meetRecords:[],photos:[]},study:{projects:[],timeLogs:[]}};
+        }
+        let D=(()=>{
+            let r=localStorage.getItem(K);
+            if(!r){let o=localStorage.getItem('lifeManageData');if(o){localStorage.setItem(K,o);return JSON.parse(o);}return defaultData();}
+            return JSON.parse(r);
+        })();
+        function L(){localStorage.setItem(K,JSON.stringify(D));}
 
-        // 实时订阅
-        async function setupRealtime(){
-            if(realtimeSub){realtimeSub.unsubscribe();}
-            realtimeSub=sb.channel('life_data_changes')
-                .on('postgres_changes',{event:'*',schema:'public',table:'life_data',filter:'id=eq.'+roomCode},(payload)=>{
-                    if(payload.new&&payload.new.data)mergeCloud(payload.new.data);
-                })
-                .subscribe();
+        function mergeCloud(cd){
+            if(!cd)return;
+            D=cd;L();RA();
         }
 
-        // 启动：如果有房间码，尝试拉取云端
-        async function initCloud(){
-            if(roomCode){
-                let {data,error}=await sb.from('life_data').select('*').eq('id',roomCode).single();
-                if(data&&data.data){mergeCloud(data.data);setCloud(true);await setupRealtime();}
-                else{setCloud(false);}
-            }else{
-                document.getElementById('roomModal').style.display='flex';
-            }
+        async function S(){
+            L();
+            if(roomCode)await cloudSave();
         }
 
         // ==================== 工具函数 ====================
@@ -645,15 +651,12 @@
             let au=document.getElementById('photoAuthor').value.trim(),tx=document.getElementById('photoText').value.trim();
             if(!au||!tx){uploading=false;document.getElementById('openPhotoUpload').innerText='📁 选择照片';alert('请填写昵称和配文');return;}
             try{
-                let path=`${roomCode||'local'}/${Date.now()}_${f.name.replace(/[^a-z0-9.]/gi,'_')}`;
-                let {data:up,error:err}=await sb.storage.from('love_photos').upload(path,f);
-                if(err)throw err;
-                let {data:{publicUrl}}=sb.storage.from('love_photos').getPublicUrl(up.path);
-                D.love.photos.push({img:publicUrl,author:au,text:tx,uploadDate:Y(),path:up.path});
+                let up=await uploadPhoto(f);
+                D.love.photos.push({img:up.url,author:au,text:tx,uploadDate:Y(),path:up.path});
                 document.getElementById('photoAuthor').value='';document.getElementById('photoText').value='';
                 document.getElementById('photoModal').style.display='none';
                 e.target.value='';await S();RL();
-            }catch(err){console.error(err);alert('上传失败：'+err.message);}
+            }catch(err){console.error(err);alert('上传失败：'+(err.message||'网络错误'));}
             uploading=false;document.getElementById('openPhotoUpload').innerText='📁 选择照片';
         };
 
@@ -766,9 +769,7 @@
         window.delPhoto=async function(i){
             if(!confirm('确定删除这张照片？'))return;
             let p=D.love.photos[i];
-            if(p&&p.path){
-                try{await sb.storage.from('love_photos').remove([p.path]);}catch(e){console.error(e);}
-            }
+            if(p&&p.path)await deletePhotoStorage(p.path);
             D.love.photos.splice(i,1);
             await S();RL();
         };
@@ -829,7 +830,16 @@
         document.getElementById('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async ev=>{try{let nd=JSON.parse(ev.target.result);if(!nd.study)nd.study={projects:[],timeLogs:[]};if(!nd.love)nd.love={startDate:'',birthdays:[],meetRecords:[],photos:[]};D=nd;L();await S();alert('✅ 导入成功！');RA();}catch(er){alert('❌ 文件格式错误');}};r.readAsText(f);};
 
         function RA(){RP();RB();RS();RM();RL();RST();}
-        window.onload=async()=>{RA();await initCloud();};
+        window.onload=async()=>{
+            RA();
+            if(roomCode){
+                let cd=await cloudLoad();
+                if(cd){mergeCloud(cd);setCloud(true);}
+                else{setCloud(false);}
+            }else{
+                document.getElementById('roomModal').style.display='flex';
+            }
+        };
     </script>
 
 
