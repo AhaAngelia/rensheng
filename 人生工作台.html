@@ -140,16 +140,16 @@
     </style>
 </head>
 <body>
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast">✅ 已加入房间：A949B1</div>
     <!-- 房间弹窗 -->
-    <div class="modal" id="roomModal" style="display:flex;">
+    <div class="modal" id="roomModal" style="display: none;">
         <div class="room-box">
             <button class="close" id="skipRoom" style="position:absolute;top:12px;right:12px;" type="button">✕</button>
             <h2>🏠 加入/创建情侣房间</h2>
             <p>和另一半共享猪猪勾勾朋友圈</p>
             <div id="roomNew">
                 <p>你没有房间，可以创建一个</p>
-                <div class="code" id="generatedCode">TCEUCS</div>
+                <div class="code" id="generatedCode">XW8QSG</div>
                 <button class="btn btn1" id="createRoom" type="button" style="width:100%;justify-content:center;">＋ 创建新房间</button>
             </div>
             <hr style="border:none;border-top:1px solid var(--sep);margin:14px 0;">
@@ -163,12 +163,12 @@
     <div class="sidebar">
         <div class="logo"><span>吉</span><div>人生工作台</div><small>每天都闪闪发光</small></div>
         <div class="cloud-status on" id="cloudStatus"><span class="dot"></span><span id="cloudText">云端同步中</span></div>
-        <button class="on" data-tab="plan">📋 每日计划</button>
-        <button data-tab="bill">💰 记账本</button>
-        <button data-tab="sport">🏃 运动打卡</button>
+        <button class="" data-tab="plan">📋 每日计划</button>
+        <button data-tab="bill" class="on">💰 记账本</button>
+        <button data-tab="sport" class="">🏃 运动打卡</button>
         <button data-tab="mood">💝 心情日记</button>
-        <button data-tab="love">💖 猪猪勾勾</button>
-        <button data-tab="study">📚 学习变美好</button>
+        <button data-tab="love" class="">💖 猪猪勾勾</button>
+        <button data-tab="study" class="">📚 学习变美好</button>
         <div class="bottom">
             <button id="weekBtn">📊 周数据</button>
             <button id="exportBtn">💾 导出</button>
@@ -181,7 +181,7 @@
 
     <div class="main">
         <!-- 1. 每日计划 -->
-        <div class="tab on" id="plan">
+        <div class="tab" id="plan">
             <div class="card">
                 <h2>📋 每日待办计划 <span class="badge">完成 <b id="planRate">0%</b></span></h2>
                 <div class="row">
@@ -194,7 +194,7 @@
         </div>
 
         <!-- 2. 记账 -->
-        <div class="tab" id="bill">
+        <div class="tab on" id="bill">
             <div class="card">
                 <h2>💰 收支记账</h2>
                 <div class="row">
@@ -206,11 +206,11 @@
                 </div>
                 <div style="display:flex;gap:16px;padding:10px 14px;background:rgba(0,0,0,0.02);border-radius:var(--r);margin:8px 0;font-size:13px;font-weight:600;">
                     <span>收入 <b style="color:var(--green)">¥<span id="monthInc">0.00</span></b></span>
-                    <span>支出 <b style="color:var(--pink)">¥<span id="monthExp">25.80</span></b></span>
-                    <span>结余 <b style="color:var(--blue)">¥<span id="monthSur">-25.80</span></b></span>
+                    <span>支出 <b style="color:var(--pink)">¥<span id="monthExp">54.39</span></b></span>
+                    <span>结余 <b style="color:var(--blue)">¥<span id="monthSur">-54.39</span></b></span>
                 </div>
-                <canvas id="billChart" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas>
-                <div id="billList"><div class="li"><span>💸 <b>餐饮</b> ¥7.90 <span style="color:var(--sec);font-size:11px;">2026/7/29 13:57:27</span></span><button class="del">🗑</button></div><div class="li"><span>💸 <b>餐饮</b> ¥17.90 <span style="color:var(--sec);font-size:11px;">2026/7/29 13:57:02</span></span><button class="del">🗑</button></div></div>
+                <canvas id="billChart" style="box-sizing: border-box; display: block; height: 220px; width: 801px;" width="1001" height="275"></canvas>
+                <div id="billList"><div class="li"><span>💸 <b>餐饮</b> ¥20.60 <span style="color:var(--sec);font-size:11px;">📝baantai打抛饭+黑金炸鸡（不值得）</span> <span style="color:var(--sec);font-size:11px;">2026/7/30 12:42:33</span></span><button class="del">🗑</button></div><div class="li"><span>💸 <b>餐饮</b> ¥7.99 <span style="color:var(--sec);font-size:11px;">📝肯德基早餐</span> <span style="color:var(--sec);font-size:11px;">2026/7/30 09:35:32</span></span><button class="del">🗑</button></div><div class="li"><span>💸 <b>餐饮</b> ¥7.90 <span style="color:var(--sec);font-size:11px;">2026/7/29 13:57:27</span></span><button class="del">🗑</button></div><div class="li"><span>💸 <b>餐饮</b> ¥17.90 <span style="color:var(--sec);font-size:11px;">2026/7/29 13:57:02</span></span><button class="del">🗑</button></div></div>
             </div>
         </div>
 
@@ -241,8 +241,8 @@
                 </div>
                 <textarea id="moodText" rows="3" placeholder="写下今天的心情点滴..."></textarea>
                 <button class="btn btn3" id="addMood" type="button" style="margin-top:7px;">💾 保存日记</button>
-                <canvas id="moodChart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
-                <div id="moodList"><div class="li"><span>2026/7/29 🙂 哈哈</span><button class="del">🗑</button></div><div class="li"><span>2026/7/29 😫 腰酸乏力</span><button class="del">🗑</button></div><div class="li"><span>2026/7/29 😫 腰酸乏力</span><button class="del">🗑</button></div><div class="li"><span>2026/7/29 😫 腰酸，乏力</span><button class="del">🗑</button></div></div>
+                <canvas id="moodChart" style="box-sizing: border-box; display: block; height: 0px; width: 0px;" width="0" height="0"></canvas>
+                <div id="moodList"><div class="li"><span>2026/7/29 😫 腰酸，乏力</span><button class="del">🗑</button></div></div>
             </div>
         </div>
 
@@ -298,7 +298,7 @@
         <div class="tab" id="study">
             <div class="card">
                 <h2>📚 学习变美好</h2>
-                <div id="studyProjectBox"><div class="empty"><span>📚</span>还没有学习项目</div></div>
+                <div id="studyProjectBox"><div class="card" style="padding:12px;margin:6px 0;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b>📌 教育学|预习|跟课&amp;课后作业</b><button class="btn btn-s btn-g" onclick="dlSP(0)">删除</button></div><div style="font-size:11px;color:var(--sec);margin-bottom:4px;">0/2 · 0%</div><div class="bar-wrap"><div class="bar-in" style="width:0%"></div></div><div style="margin-top:6px;"><label class="li" style="padding:7px 9px;"><input type="checkbox" onchange="tgST(0,0)"><span class="cb"></span><span style="">第一章</span><button class="del" onclick="dlST(0,0)">🗑</button></label><label class="li" style="padding:7px 9px;"><input type="checkbox" onchange="tgST(0,1)"><span class="cb"></span><span style="">第二章</span><button class="del" onclick="dlST(0,1)">🗑</button></label></div><button class="btn btn-s btn1" onclick="addST(0)" style="margin-top:6px;">＋ 添加任务</button></div><div class="card" style="padding:12px;margin:6px 0;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b>📌 教育学|刷题&amp;复盘</b><button class="btn btn-s btn-g" onclick="dlSP(1)">删除</button></div><div style="font-size:11px;color:var(--sec);margin-bottom:4px;">0/0 · 0%</div><div class="bar-wrap"><div class="bar-in" style="width:0%"></div></div><div style="margin-top:6px;"><div style="font-size:11px;color:var(--sec);padding:6px 0;">暂无任务</div></div><button class="btn btn-s btn1" onclick="addST(1)" style="margin-top:6px;">＋ 添加任务</button></div><div class="card" style="padding:12px;margin:6px 0;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b>📌 教育学|主观题背诵&amp;默写</b><button class="btn btn-s btn-g" onclick="dlSP(2)">删除</button></div><div style="font-size:11px;color:var(--sec);margin-bottom:4px;">0/0 · 0%</div><div class="bar-wrap"><div class="bar-in" style="width:0%"></div></div><div style="margin-top:6px;"><div style="font-size:11px;color:var(--sec);padding:6px 0;">暂无任务</div></div><button class="btn btn-s btn1" onclick="addST(2)" style="margin-top:6px;">＋ 添加任务</button></div><div class="card" style="padding:12px;margin:6px 0;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b>📌 教育学|整理笔记&amp;背诵</b><button class="btn btn-s btn-g" onclick="dlSP(3)">删除</button></div><div style="font-size:11px;color:var(--sec);margin-bottom:4px;">0/0 · 0%</div><div class="bar-wrap"><div class="bar-in" style="width:0%"></div></div><div style="margin-top:6px;"><div style="font-size:11px;color:var(--sec);padding:6px 0;">暂无任务</div></div><button class="btn btn-s btn1" onclick="addST(3)" style="margin-top:6px;">＋ 添加任务</button></div></div>
                 <div style="text-align:center;margin-top:8px;">
                     <button class="btn btn1" id="addStudyPro" type="button">＋ 新建学习项目</button>
                 </div>
@@ -306,17 +306,17 @@
                 <div class="edit-panel" id="studyEditPanel">
                     <h4>⏱ 记录学习时长</h4>
                     <div class="row">
-                        <select id="studyTimePro"><option value="-1">📚 选择项目</option></select>
+                        <select id="studyTimePro"><option value="-1">📚 选择项目</option><option value="0">教育学|预习|跟课&amp;课后作业</option><option value="1">教育学|刷题&amp;复盘</option><option value="2">教育学|主观题背诵&amp;默写</option><option value="3">教育学|整理笔记&amp;背诵</option></select>
                         <input type="number" min="0.5" step="0.5" placeholder="小时" id="studyHour">
                         <input placeholder="备注" id="studyNote">
                         <button class="btn btn2" id="saveStudyTime" type="button">💾 保存</button>
                     </div>
                     <div class="insight">
                         <h4>📊 本周统计</h4>
-                        <p id="weekStudyTotal">本周累计学习：0.0 小时</p>
+                        <p id="weekStudyTotal">本周累计学习：1.5 小时</p>
                         <p id="weekStudySummary">💡 学习时长偏少，建议固定每日时段</p>
                     </div>
-                    <div id="studyTimeList"><div style="font-size:11px;font-weight:700;color:var(--sec);margin:12px 0 6px;">📋 历史记录</div><div class="empty"><span>📖</span>还没有学习记录</div></div>
+                    <div id="studyTimeList"><div style="font-size:11px;font-weight:700;color:var(--sec);margin:12px 0 6px;">📋 历史记录</div><div class="li"><span>📅 2026/7/30 ｜ 教育学|主观题背诵&amp;默写 ⏱1.5h 📝11-19题</span><button class="del">🗑</button></div></div>
                 </div>
             </div>
         </div>
